@@ -23,6 +23,9 @@ app.use("/public", express.static("public"));
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 4000;
+app.get("/", function (req, res) {
+  res.send("Backend is running successfully....");
+});
 
 app.listen(PORT, () => {
   console.log(`server listening on http://127.0.0.1:${PORT}`);
