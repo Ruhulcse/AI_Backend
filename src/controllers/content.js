@@ -12,6 +12,7 @@ const configuration = new Configuration({
 const openai = new OpenAIApi(configuration);
 
 module.exports.uploadContent = async (req, res, next) => {
+  console.log("api is called")
   const { user, file } = req;
   try {
     const dt = XLSX.readFile("public/uploads/" + file.filename);
