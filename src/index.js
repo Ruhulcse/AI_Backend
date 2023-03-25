@@ -23,7 +23,7 @@ app.use("/public", express.static("public"));
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 4000;
-app.get("/", function (req, res) {
+app.get("/test", function (req, res) {
   res.send("Backend is running successfully....");
 });
 
