@@ -12,11 +12,9 @@ const configuration = new Configuration({
 const openai = new OpenAIApi(configuration);
 
 module.exports.uploadContent = async (req, res, next) => {
-  console.log("api is called")
   const { user, file } = req;
   try {
     const dt = XLSX.readFile("public/uploads/" + file.filename);
-    console.log("file read done", dt)
     const first_worksheet = dt.Sheets[dt.SheetNames[0]];
     const data = XLSX.utils.sheet_to_json(first_worksheet, { header: 1 });
 
@@ -64,7 +62,7 @@ module.exports.uploadContent = async (req, res, next) => {
 
 module.exports.downloadContent = async (req, res, next) => {
   const { user, body } = req;
-  // console.log("request body is ", body)
+  console.log("request body is ", body)
   try {
     const contents = await contentDetailsModel
       .find({ content: body.content })
@@ -79,9 +77,6 @@ module.exports.downloadContent = async (req, res, next) => {
         article: item.article,
       })
     );
-
-    // console.log("data is ", data)
-
     const ws = XLSX.utils.json_to_sheet(data);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Responses");
