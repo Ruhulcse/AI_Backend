@@ -31,7 +31,7 @@ module.exports.uploadContent = async (req, res, next) => {
         max_tokens: 1000,
         n: 1,
       });
-      console.log("content generate complete for ", data[i][1])
+      console.log(`${i} content generate done for`)
       const completion = response.data.choices[0].text;
 
       await contentDetailsModel.create({
