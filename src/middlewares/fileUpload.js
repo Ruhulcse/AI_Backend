@@ -37,7 +37,7 @@ module.exports.upload = multer({
   storage: storage,
   fileFilter: fileFilter,
   limits: {
-    fieldNameSize: 100,
-    fileSize: 50120, // 5 Mb
+    fieldNameSize: 1000,
+    fileSize: 5 * 1024 * 1024 , // 5 Mb
   },
 }).single("file");

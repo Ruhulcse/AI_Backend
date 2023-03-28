@@ -5,6 +5,10 @@ const { generateCode } = require("../helpers/code_generator");
 const XLSX = require("xlsx");
 const { Configuration, OpenAIApi } = require("openai");
 const fs = require("fs");
+const path = require('path');
+
+// Define the public/uploads directory and the file to remove
+const publicDirectory =  'public/uploads';
 
 const configuration = new Configuration({
   apiKey: process.env.OPENAI_API_KEY,
@@ -18,11 +22,7 @@ module.exports.uploadContent = async (req, res, next) => {
     const first_worksheet = dt.Sheets[dt.SheetNames[0]];
     const data = XLSX.utils.sheet_to_json(first_worksheet, { header: 1 });
 
-    const content = await contentModel.create({
-      code: generateCode(),
-      file_name: file.originalname,
-      created_by: user.id,
-    });
+   
 
     for (let i = 1; i < data.length; i++) {
       const response = await openai.createCompletion({
@@ -49,6 +49,11 @@ module.exports.uploadContent = async (req, res, next) => {
         fs.rmSync(path, { recursive: true, force: true });
       }, 60000);
     }
+    const content = await contentModel.create({
+      code: generateCode(),
+      file_name: file.originalname,
+      created_by: user.id,
+    });
 
     res.send({
       status: true,
@@ -89,7 +94,7 @@ module.exports.downloadContent = async (req, res, next) => {
         fs.rmSync(path, { recursive: true, force: true });
       }, 60000);
     }
-
+   console.log(path)
     res.send({
       status: true,
       data: path,
