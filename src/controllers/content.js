@@ -21,9 +21,18 @@ module.exports.uploadContent = async (req, res, next) => {
     const dt = XLSX.readFile("public/uploads/" + file.filename);
     const first_worksheet = dt.Sheets[dt.SheetNames[0]];
     const data = XLSX.utils.sheet_to_json(first_worksheet, { header: 1 });
-
-   
-
+    console.log("api called")
+    const response = await openai.createCompletion({
+      model: "text-davinci-003",
+      prompt: "say hi",
+      max_tokens: 1000,
+      n: 1,
+    });
+    const content = await contentModel.create({
+      code: generateCode(),
+      file_name: file.originalname,
+      created_by: user.id,
+    });
     for (let i = 1; i < data.length; i++) {
       const response = await openai.createCompletion({
         model: "text-davinci-003",
@@ -49,11 +58,7 @@ module.exports.uploadContent = async (req, res, next) => {
         fs.rmSync(path, { recursive: true, force: true });
       }, 60000);
     }
-    const content = await contentModel.create({
-      code: generateCode(),
-      file_name: file.originalname,
-      created_by: user.id,
-    });
+   
 
     res.send({
       status: true,
