@@ -5,16 +5,45 @@ const { generateCode } = require("../helpers/code_generator");
 const XLSX = require("xlsx");
 const { Configuration, OpenAIApi } = require("openai");
 const fs = require("fs");
-const path = require('path');
+const Bottleneck = require("bottleneck");
 
-// Define the public/uploads directory and the file to remove
-const publicDirectory =  'public/uploads';
+let contentGenerateStop = false;
 
 const configuration = new Configuration({
   apiKey: process.env.OPENAI_API_KEY,
 });
 const openai = new OpenAIApi(configuration);
 
+const maxRPM = 60;
+const maxTPM = 40000;
+
+const limiter = new Bottleneck({
+  reservoir: maxTPM,
+  reservoirRefreshAmount: maxTPM,
+  reservoirRefreshInterval: 60 * 1000,
+  minTime: (60 * 1000) / maxRPM,
+});
+
+async function callGPTApi(prompt) {
+  try {
+    const response = await openai.createCompletion({
+      model: "text-davinci-003",
+      prompt,
+      max_tokens: 1000,
+      n: 1,
+    });
+    return response.data.choices[0].text;
+  } catch (error) {
+    if (error.response && error.response.status === 429) {
+      const retryAfter = error.response.headers["retry-after"] || 1;
+      console.log(`Rate limit exceeded. Retrying after ${retryAfter} seconds.`);
+      await new Promise((resolve) => setTimeout(resolve, retryAfter * 1000));
+      return callGPTApi(prompt);
+    } else {
+      throw error;
+    }
+  }
+}
 module.exports.uploadContent = async (req, res, next) => {
   const { user, file } = req;
   try {
@@ -22,27 +51,18 @@ module.exports.uploadContent = async (req, res, next) => {
     const first_worksheet = dt.Sheets[dt.SheetNames[0]];
     const data = XLSX.utils.sheet_to_json(first_worksheet, { header: 1 });
     console.log("api called")
-    const response = await openai.createCompletion({
-      model: "text-davinci-003",
-      prompt: "say hi",
-      max_tokens: 1000,
-      n: 1,
-    });
     const content = await contentModel.create({
       code: generateCode(),
       file_name: file.originalname,
       created_by: user.id,
     });
     for (let i = 1; i < data.length; i++) {
-      const response = await openai.createCompletion({
-        model: "text-davinci-003",
-        prompt: data[i][1],
-        max_tokens: 1000,
-        n: 1,
-      });
-      console.log(`${i} content generate done for`)
-      const completion = response.data.choices[0].text;
-
+      if(contentGenerateStop){
+        contentGenerateStop=false;
+        break
+      }
+      const completion = await limiter.schedule(() => callGPTApi(data[i][1]));
+      console.log(`${i} content generate done for`);
       await contentDetailsModel.create({
         content: content._id,
         topic: data[i][0],
@@ -65,6 +85,7 @@ module.exports.uploadContent = async (req, res, next) => {
       data: data,
     });
   } catch (err) {
+    console.log(err)
     console.log(err.message);
     next(err);
   }
@@ -117,6 +138,8 @@ module.exports.getContents = async (req, res, next) => {
     const pageNum = page ? parseInt(page, 10) : 1;
     const Limit = limit ? parseInt(limit, 10) : 10;
     const skip = Limit * (pageNum - 1);
+
+    contentGenerateStop = true;
 
     if (page) delete query.page;
     if (limit) delete query.limit;
