@@ -7,7 +7,6 @@ const { Configuration, OpenAIApi } = require("openai");
 const fs = require("fs");
 const Bottleneck = require("bottleneck");
 
-let contentGenerateStop = false;
 
 const configuration = new Configuration({
   apiKey: process.env.OPENAI_API_KEY,
@@ -57,10 +56,6 @@ module.exports.uploadContent = async (req, res, next) => {
       created_by: user.id,
     });
     for (let i = 1; i < data.length; i++) {
-      if(contentGenerateStop){
-        contentGenerateStop=false;
-        break
-      }
       const completion = await limiter.schedule(() => callGPTApi(data[i][1]));
       console.log(`${i} content generate done for`);
       await contentDetailsModel.create({
@@ -138,8 +133,6 @@ module.exports.getContents = async (req, res, next) => {
     const pageNum = page ? parseInt(page, 10) : 1;
     const Limit = limit ? parseInt(limit, 10) : 10;
     const skip = Limit * (pageNum - 1);
-
-    contentGenerateStop = true;
 
     if (page) delete query.page;
     if (limit) delete query.limit;
