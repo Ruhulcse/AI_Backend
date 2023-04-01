@@ -74,7 +74,7 @@ module.exports.uploadContent = async (req, res, next) => {
     const target = data.length;
     for (let i = 1; i < target; i++) {
       const completion = await callGPTApiWithRetry(data[i][1]);
-      console.log(`${i} content generate done for`);
+      console.log(`${i} content generate done`);
       await contentDetailsModel.create({
         content: content._id,
         topic: data[i][0],
