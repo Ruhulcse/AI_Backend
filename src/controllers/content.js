@@ -72,8 +72,8 @@ module.exports.uploadContent = async (req, res, next) => {
       created_by: user.id,
     });
     const target = data.length;
-    const batchSize = 50;
-    const delayTime = 3 * 60 * 1000; // 4 minutes in milliseconds
+    const batchSize = 20;
+    const delayTime = 1 * 60 * 1000; // 4 minutes in milliseconds
     for (let i = 1; i < target; i++) {
       const completion = await callGPTApiWithRetry(data[i][1]);
       console.log(`${i} content generate done`);
@@ -84,7 +84,7 @@ module.exports.uploadContent = async (req, res, next) => {
         article: completion,
       });
     }
-      // Wait for 3 minutes after every 50 API calls
+      // Wait for 1 minutes after every 50 API calls
       if (i % batchSize === 0 && i < target - 1) {
         console.log(`Waiting for ${delayTime / 60000} minutes before resuming...`);
         await delayBetweenBatches(delayTime);
