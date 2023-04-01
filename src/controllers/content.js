@@ -39,6 +39,7 @@ async function callGPTApi(prompt) {
       await new Promise((resolve) => setTimeout(resolve, retryAfter * 1000));
       return callGPTApi(prompt);
     } else {
+      console.log(error)
       throw error;
     }
   }
@@ -54,6 +55,7 @@ async function callGPTApiWithRetry(prompt, maxRetries = 5, delay = 1000) {
         await new Promise(resolve => setTimeout(resolve, delay));
         delay *= 2; // Increase the delay for the next retry
       } else {
+        console.log(error)
         throw error; // If all retries fail, rethrow the error
       }
     }
