@@ -83,12 +83,12 @@ module.exports.uploadContent = async (req, res, next) => {
         prompt: data[i][1],
         article: completion,
       });
-    }
-      // Wait for 1 minutes after every 50 API calls
-      if (i % batchSize === 0 && i < target - 1) {
+       // Wait for 1 minutes after every 50 API calls
+       if (i % batchSize === 0 && i < target - 1) {
         console.log(`Waiting for ${delayTime / 60000} minutes before resuming...`);
         await delayBetweenBatches(delayTime);
       }
+    }
     console.log("content generate done..")
     const path = `public/uploads/${file.filename}`;
     // delete file
