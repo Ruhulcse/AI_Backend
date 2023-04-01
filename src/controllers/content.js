@@ -22,7 +22,7 @@ const limiter = new Bottleneck({
   reservoirRefreshInterval: 60 * 1000,
   minTime: (60 * 1000) / maxRPM,
 });
-
+const delayBetweenBatches = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 async function callGPTApi(prompt) {
   try {
     const response = await openai.createCompletion({
@@ -72,10 +72,9 @@ module.exports.uploadContent = async (req, res, next) => {
       created_by: user.id,
     });
     const target = data.length;
+    const batchSize = 50;
+    const delayTime = 3 * 60 * 1000; // 4 minutes in milliseconds
     for (let i = 1; i < target; i++) {
-      if(i=130){
-        break;
-      }
       const completion = await callGPTApiWithRetry(data[i][1]);
       console.log(`${i} content generate done`);
       await contentDetailsModel.create({
@@ -85,6 +84,11 @@ module.exports.uploadContent = async (req, res, next) => {
         article: completion,
       });
     }
+      // Wait for 3 minutes after every 50 API calls
+      if (i % batchSize === 0 && i < target - 1) {
+        console.log(`Waiting for ${delayTime / 60000} minutes before resuming...`);
+        await delayBetweenBatches(delayTime);
+      }
     console.log("content generate done..")
     const path = `public/uploads/${file.filename}`;
     // delete file
