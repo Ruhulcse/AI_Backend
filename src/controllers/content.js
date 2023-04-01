@@ -43,6 +43,22 @@ async function callGPTApi(prompt) {
     }
   }
 }
+async function callGPTApiWithRetry(prompt, maxRetries = 5, delay = 1000) {
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      const completion = await limiter.schedule(() => callGPTApi(prompt));
+      return completion;
+    } catch (error) {
+      console.error(`Attempt ${i + 1} failed:`, error);
+      if (i < maxRetries - 1) {
+        await new Promise(resolve => setTimeout(resolve, delay));
+        delay *= 2; // Increase the delay for the next retry
+      } else {
+        throw error; // If all retries fail, rethrow the error
+      }
+    }
+  }
+}
 module.exports.uploadContent = async (req, res, next) => {
   const { user, file } = req;
   try {
@@ -55,8 +71,9 @@ module.exports.uploadContent = async (req, res, next) => {
       file_name: file.originalname,
       created_by: user.id,
     });
-    for (let i = 1; i < data.length; i++) {
-      const completion = await limiter.schedule(() => callGPTApi(data[i][1]));
+    const target = data.length;
+    for (let i = 1; i < target; i++) {
+      const completion = await callGPTApiWithRetry(data[i][1]);
       console.log(`${i} content generate done for`);
       await contentDetailsModel.create({
         content: content._id,
