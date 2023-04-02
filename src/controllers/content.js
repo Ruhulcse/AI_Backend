@@ -40,7 +40,7 @@ async function callGPTApi(prompt) {
       return callGPTApi(prompt);
     } else {
       console.log(error);
-      throw error;
+      // throw error;
     }
   }
 }
@@ -56,7 +56,7 @@ async function callGPTApiWithRetry(prompt, maxRetries = 5, delay = 1000) {
         delay *= 2; // Increase the delay for the next retry
       } else {
         console.log(error);
-        throw error; // If all retries fail, rethrow the error
+        // throw error; // If all retries fail, rethrow the error
       }
     }
   }
@@ -109,7 +109,7 @@ module.exports.uploadContent = async (req, res, next) => {
   } catch (err) {
     console.log(err);
     console.log(err.message);
-    next(err);
+    // next(err);
   }
 };
 
