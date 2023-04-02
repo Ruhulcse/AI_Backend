@@ -24,7 +24,7 @@ app.use(errorHandler);
 
 const PORT = process.env.PORT || 4000;
 app.get("/test", function (req, res) {
-  res.send("Backend is running successfully....");
+  res.send("Backend is running successfully.....");
 });
 
 app.listen(PORT, () => {
