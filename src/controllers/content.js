@@ -74,7 +74,7 @@ const uploadContent = async (req, res, next) => {
       created_by: user.id,
     });
     const target = data.length;
-    const batchSize = 20;
+    const batchSize = 50;
     // const delayTime = 1 * 10 * 1000; // 4 minutes in milliseconds
     for (let i = 1; i < target; i += batchSize) {
       const batchData = data.slice(i, i + batchSize);
