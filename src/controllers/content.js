@@ -7,7 +7,6 @@ const { Configuration, OpenAIApi } = require("openai");
 const fs = require("fs");
 const Bottleneck = require("bottleneck");
 
-
 const configuration = new Configuration({
   apiKey: process.env.OPENAI_API_KEY,
 });
@@ -22,7 +21,8 @@ const limiter = new Bottleneck({
   reservoirRefreshInterval: 60 * 1000,
   minTime: (60 * 1000) / maxRPM,
 });
-const delayBetweenBatches = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+const delayBetweenBatches = (ms) =>
+  new Promise((resolve) => setTimeout(resolve, ms));
 async function callGPTApi(prompt) {
   try {
     const response = await openai.createCompletion({
@@ -39,7 +39,7 @@ async function callGPTApi(prompt) {
       await new Promise((resolve) => setTimeout(resolve, retryAfter * 1000));
       return callGPTApi(prompt);
     } else {
-      console.log(error)
+      console.log(error);
       throw error;
     }
   }
@@ -52,10 +52,10 @@ async function callGPTApiWithRetry(prompt, maxRetries = 5, delay = 1000) {
     } catch (error) {
       console.error(`Attempt ${i + 1} failed:`, error);
       if (i < maxRetries - 1) {
-        await new Promise(resolve => setTimeout(resolve, delay));
+        await new Promise((resolve) => setTimeout(resolve, delay));
         delay *= 2; // Increase the delay for the next retry
       } else {
-        console.log(error)
+        console.log(error);
         throw error; // If all retries fail, rethrow the error
       }
     }
@@ -67,7 +67,7 @@ module.exports.uploadContent = async (req, res, next) => {
     const dt = XLSX.readFile("public/uploads/" + file.filename);
     const first_worksheet = dt.Sheets[dt.SheetNames[0]];
     const data = XLSX.utils.sheet_to_json(first_worksheet, { header: 1 });
-    console.log("api called")
+    console.log("api called");
     const content = await contentModel.create({
       code: generateCode(),
       file_name: file.originalname,
@@ -85,13 +85,15 @@ module.exports.uploadContent = async (req, res, next) => {
         prompt: data[i][1],
         article: completion,
       });
-       // Wait for 1 minutes after every 50 API calls
-       if (i % batchSize === 0 && i < target - 1) {
-        console.log(`Waiting for ${delayTime / 60000} minutes before resuming...`);
+      // Wait for 1 minutes after every 50 API calls
+      if (i % batchSize === 0 && i < target - 1) {
+        console.log(
+          `Waiting for ${delayTime / 60000} minutes before resuming...`
+        );
         await delayBetweenBatches(delayTime);
       }
     }
-    console.log("content generate done..")
+    console.log("content generate done..");
     const path = `public/uploads/${file.filename}`;
     // delete file
     if (fs.existsSync(path)) {
@@ -99,14 +101,13 @@ module.exports.uploadContent = async (req, res, next) => {
         fs.rmSync(path, { recursive: true, force: true });
       }, 60000);
     }
-   
 
     res.send({
       status: true,
       data: data,
     });
   } catch (err) {
-    console.log(err)
+    console.log(err);
     console.log(err.message);
     next(err);
   }
@@ -114,13 +115,13 @@ module.exports.uploadContent = async (req, res, next) => {
 
 module.exports.downloadContent = async (req, res, next) => {
   const { user, body } = req;
-  console.log("request body is ", body)
+  console.log("request body is ", body);
   try {
     const contents = await contentDetailsModel
       .find({ content: body.content })
       .populate({ path: "content", select: "file_name -_id" })
       .sort({ createdAt: "desc" });
-  //  console.log("content is ", contents)
+    //  console.log("content is ", contents)
     const data = [];
     contents.map((item) =>
       data.push({
@@ -141,7 +142,7 @@ module.exports.downloadContent = async (req, res, next) => {
         fs.rmSync(path, { recursive: true, force: true });
       }, 60000);
     }
-   console.log(path)
+    console.log(path);
     res.send({
       status: true,
       data: path,
