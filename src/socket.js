@@ -1,5 +1,6 @@
-
+let socket;
 module.exports = function (io) {
+  socket = io;
   // socket connection
   io.on("connection", async function (socket) {
     console.log(`⚡: ${socket.id} user just connected`);
@@ -25,3 +26,5 @@ module.exports = function (io) {
   });
   return io;
 };
+
+module.exports.sendMessage = (key, message) => socket.emit(key, message);

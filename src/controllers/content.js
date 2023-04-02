@@ -2,21 +2,12 @@ const contentModel = require("../models/Content");
 const contentDetailsModel = require("../models/ContentDetails");
 const { ErrorHandler } = require("../utils/error");
 const { generateCode } = require("../helpers/code_generator");
-// const {getIo} = require("../index");
 const XLSX = require("xlsx");
 const { Configuration, OpenAIApi } = require("openai");
 const fs = require("fs");
 const Bottleneck = require("bottleneck");
-// const io = getIo();
-// const socket = require("../socket")(io);
+const socket = require("../socket");
 
-// module.exports = function(io){
-//   io.socket.on('connection', function (socket) {
-//     socket.on('file1Event', function () {
-//       console.log('file1Event triggered');
-//     });
-//   });
-// }
 
 const configuration = new Configuration({
   apiKey: process.env.OPENAI_API_KEY,
@@ -110,9 +101,9 @@ const uploadContent = async (req, res, next) => {
     console.log("database insertion done")
     }
     console.log("content generate done..");
-    // socket.emit("content-response", {
-    //   greeting: `${file.originalname} Content Generate Successfully.`,
-    // });
+    socket.sendMessage("content-response", {
+      greeting: `${file.originalname} Content Generate Successfully.`,
+    });
     const path = `public/uploads/${file.filename}`;
     // delete file
     if (fs.existsSync(path)) {

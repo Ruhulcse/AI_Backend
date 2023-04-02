@@ -7,7 +7,6 @@ const logger = require("morgan");
 const helmet = require("helmet");
 const routes = require("./routes");
 const socket = require("./socket");
-const content = require("./controllers/content");
 const auth = require("./middlewares/auth");
 const errorHandler = require("./middlewares/errors");
 const cors = require("cors");
@@ -37,9 +36,5 @@ server.listen(PORT, () => {
 
 // socket connection
 socket(io);
-// content(io);
-var getIOInstance = function(){
-  return io;
-};
 
 module.exports = app;
