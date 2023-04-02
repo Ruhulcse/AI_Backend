@@ -13,7 +13,7 @@ require("dotenv").config();
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
-app.use(cors());
+app.use(cors({ origin: "http://localhost:3000" }));
 app.use("/api", auth.authorize);
 app.use(logger("dev"));
 app.use(helmet());
@@ -24,7 +24,7 @@ app.use(errorHandler);
 
 const PORT = process.env.PORT || 4000;
 app.get("/test", function (req, res) {
-  res.send("Backend is running successfully....");
+  res.send("Backend is running successfully.....");
 });
 
 app.listen(PORT, () => {
