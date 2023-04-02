@@ -2,10 +2,21 @@ const contentModel = require("../models/Content");
 const contentDetailsModel = require("../models/ContentDetails");
 const { ErrorHandler } = require("../utils/error");
 const { generateCode } = require("../helpers/code_generator");
+// const {getIo} = require("../index");
 const XLSX = require("xlsx");
 const { Configuration, OpenAIApi } = require("openai");
 const fs = require("fs");
 const Bottleneck = require("bottleneck");
+// const io = getIo();
+// const socket = require("../socket")(io);
+
+// module.exports = function(io){
+//   io.socket.on('connection', function (socket) {
+//     socket.on('file1Event', function () {
+//       console.log('file1Event triggered');
+//     });
+//   });
+// }
 
 const configuration = new Configuration({
   apiKey: process.env.OPENAI_API_KEY,
@@ -21,8 +32,10 @@ const limiter = new Bottleneck({
   reservoirRefreshInterval: 60 * 1000,
   minTime: (60 * 1000) / maxRPM,
 });
+
 const delayBetweenBatches = (ms) =>
   new Promise((resolve) => setTimeout(resolve, ms));
+
 async function callGPTApi(prompt) {
   try {
     const response = await openai.createCompletion({
@@ -41,9 +54,9 @@ async function callGPTApi(prompt) {
     } else {
       console.log(error);
       // throw error;
-    }
-  }
+    }  }
 }
+
 async function callGPTApiWithRetry(prompt, maxRetries = 5, delay = 1000) {
   for (let i = 0; i < maxRetries; i++) {
     try {
@@ -61,6 +74,7 @@ async function callGPTApiWithRetry(prompt, maxRetries = 5, delay = 1000) {
     }
   }
 }
+
 const uploadContent = async (req, res, next) => {
   const { user, file } = req;
   try {
@@ -96,6 +110,9 @@ const uploadContent = async (req, res, next) => {
     console.log("database insertion done")
     }
     console.log("content generate done..");
+    // socket.emit("content-response", {
+    //   greeting: `${file.originalname} Content Generate Successfully.`,
+    // });
     const path = `public/uploads/${file.filename}`;
     // delete file
     if (fs.existsSync(path)) {
@@ -114,6 +131,7 @@ const uploadContent = async (req, res, next) => {
     // next(err);
   }
 };
+
 module.exports.uploadData = async (req,res,next)=>{
   setTimeout(() => {
     uploadContent(req, res, next);
@@ -123,6 +141,7 @@ module.exports.uploadData = async (req,res,next)=>{
       data: "upload is on process....",
     });
 }
+
 module.exports.downloadContent = async (req, res, next) => {
   const { user, body } = req;
   console.log("request body is ", body);
