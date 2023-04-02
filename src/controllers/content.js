@@ -61,7 +61,7 @@ async function callGPTApiWithRetry(prompt, maxRetries = 5, delay = 1000) {
     }
   }
 }
-module.exports.uploadContent = async (req, res, next) => {
+const uploadContent = async (req, res, next) => {
   const { user, file } = req;
   try {
     const dt = XLSX.readFile("public/uploads/" + file.filename);
@@ -75,7 +75,7 @@ module.exports.uploadContent = async (req, res, next) => {
     });
     const target = data.length;
     const batchSize = 20;
-    const delayTime = 1 * 60 * 1000; // 4 minutes in milliseconds
+    const delayTime = 1 * 10 * 1000; // 4 minutes in milliseconds
     for (let i = 1; i < target; i++) {
       const completion = await callGPTApiWithRetry(data[i][1]);
       console.log(`${i} content generate done`);
@@ -85,9 +85,9 @@ module.exports.uploadContent = async (req, res, next) => {
         prompt: data[i][1],
         article: completion,
       });
-       // Wait for 1 minutes after every 50 API calls
+       // Wait for 1 minutes after every 20 API calls
        if (i % batchSize === 0 && i < target - 1) {
-        console.log(`Waiting for ${delayTime / 60000} minutes before resuming...`);
+        console.log(`Waiting for ${delayTime / 30000} seconds before resuming...`);
         await delayBetweenBatches(delayTime);
       }
     }
@@ -101,17 +101,25 @@ module.exports.uploadContent = async (req, res, next) => {
     }
    
 
-    res.send({
-      status: true,
-      data: data,
-    });
+    // res.send({
+    //   status: true,
+    //   data: data,
+    // });
   } catch (err) {
     console.log(err)
     console.log(err.message);
     next(err);
   }
 };
-
+module.exports.uploadData = async (req,res,next)=>{
+  setTimeout(() => {
+    uploadContent(req, res, next);
+  }, 10000);
+   res.send({
+      status: true,
+      data: "upload is on process....",
+    });
+}
 module.exports.downloadContent = async (req, res, next) => {
   const { user, body } = req;
   console.log("request body is ", body)
