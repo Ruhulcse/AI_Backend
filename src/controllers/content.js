@@ -75,21 +75,25 @@ const uploadContent = async (req, res, next) => {
     });
     const target = data.length;
     const batchSize = 20;
-    const delayTime = 1 * 10 * 1000; // 4 minutes in milliseconds
-    for (let i = 1; i < target; i++) {
-      const completion = await callGPTApiWithRetry(data[i][1]);
-      console.log(`${i} content generate done`);
+    // const delayTime = 1 * 10 * 1000; // 4 minutes in milliseconds
+    for (let i = 1; i < target; i += batchSize) {
+      const batchData = data.slice(i, i + batchSize);
+      const promises = batchData.map((item) => {
+        return callGPTApiWithRetry(item[1]);
+      });
+      const batchResults = await Promise.allSettled(promises);
+    console.log(`${i}-${i + batchSize - 1} batch complete`);
+   
+    for (let j = 0; j < batchResults.length; j++) {
+      const completion = batchResults[j].value;
       await contentDetailsModel.create({
         content: content._id,
-        topic: data[i][0],
-        prompt: data[i][1],
+        topic: data[i + j][0],
+        prompt: data[i + j][1],
         article: completion,
       });
-       // Wait for 1 minutes after every 20 API calls
-       if (i % batchSize === 0 && i < target - 1) {
-        console.log(`Waiting for ${delayTime / 30000} seconds before resuming...`);
-        await delayBetweenBatches(delayTime);
-      }
+    }
+    console.log("database insertion done")
     }
     console.log("content generate done..");
     const path = `public/uploads/${file.filename}`;
