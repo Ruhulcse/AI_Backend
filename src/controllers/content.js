@@ -101,9 +101,6 @@ const uploadContent = async (req, res, next) => {
     console.log("database insertion done")
     }
     console.log("content generate done..");
-    socket.sendMessage("content-response", {
-      greeting: `${file.originalname} Content Generate Successfully.`,
-    });
     const path = `public/uploads/${file.filename}`;
     // delete file
     if (fs.existsSync(path)) {
@@ -112,10 +109,9 @@ const uploadContent = async (req, res, next) => {
       }, 60000);
     }
 
-    // res.send({
-    //   status: true,
-    //   data: data,
-    // });
+    socket.sendMessage("content-response", {
+      greeting: `${file.originalname} Content Generate Successfully.`,
+    });
   } catch (err) {
     console.log(err);
     console.log(err.message);
@@ -129,7 +125,7 @@ module.exports.uploadData = async (req,res,next)=>{
   }, 10000);
    res.send({
       status: true,
-      data: "upload is on process....",
+      data: "Content Generation On Process, Notify You After Complete.",
     });
 }
 
