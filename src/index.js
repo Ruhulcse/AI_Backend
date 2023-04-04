@@ -16,7 +16,7 @@ require("dotenv").config();
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
-app.use(cors({ origin: "http://localhost:3000" }));
+app.use(cors({ origin: "https://ai-bakend.onrender.com/" }));
 app.use("/api", auth.authorize);
 app.use(logger("dev"));
 app.use(helmet());
